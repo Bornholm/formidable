@@ -1,0 +1,11 @@
+{{define "form_item"}}
+<table width="100%">
+    <tbody>
+        {{ $root := .}}
+        {{ range $property, $schema := .Schema.Properties}}
+            {{ $formItemData := formItemData $root $property $schema }}
+            {{template "form_row" $formItemData}}
+        {{end}}
+    </tbody>
+</table>
+{{end}}

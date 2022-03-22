@@ -1,0 +1,10 @@
+{{define "form_input"}}
+    {{ if .Schema.Types }}
+        {{ $root := . }}
+        {{range .Schema.Types}}
+            {{ $inputBlock := printf "%s_%s" "form_input" . }}
+            {{ include $inputBlock $root }}
+        {{end}}
+    {{ else }}
+    {{ end }}
+{{end}}

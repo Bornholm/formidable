@@ -1,0 +1,8 @@
+{
+    "nestedObject": {
+        "foo": [
+            "bar",
+            0
+        ]
+    }
+}

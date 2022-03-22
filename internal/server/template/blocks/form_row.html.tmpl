@@ -1,0 +1,23 @@
+{{define "form_row"}}
+{{ $fullProperty := getFullProperty .Parent .Property }}
+<tr>
+    <td align="left" nowrap="">
+        <label for="{{ $fullProperty }}">
+            <strong>
+                {{ if .Schema.Title }}{{ .Schema.Title }}{{ else }}{{ .Property }}{{ end }}
+            </strong>
+            <br />
+            <span>{{ .Schema.Description }}</span>
+        </label>
+    </td>
+    <td align="left" nowrap="">
+        {{template "form_input" .}}
+    </td>
+    <td>
+        {{ $err := getPropertyError .Error $fullProperty }}
+        {{if $err}}
+        <em>{{ $err.Message }}</em>
+        {{end}}
+    </td>
+</tr>
+{{end}}

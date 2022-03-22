@@ -1,0 +1,19 @@
+{{define "form"}}
+<form method="post">
+    <table width="100%">
+        <tbody>
+            <tr>
+                <td align="left" nowrap=""></td>
+                <td align="right" nowrap="">
+                    <input type="submit" name="submit" value="Enregistrer" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <hr />
+    <strong>{{ .Schema.Title }}</strong>
+    <em>{{ .Schema.Description }}</em>
+    <hr />
+    {{template "form_item" .}}
+</form>
+{{end}}

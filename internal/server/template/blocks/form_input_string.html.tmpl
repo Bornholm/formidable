@@ -1,0 +1,5 @@
+{{define "form_input_string"}}
+{{ $fullProperty := getFullProperty .Parent .Property }}
+{{ $value := getValue .Defaults .Values $fullProperty }}
+<input type="text" name="{{ $fullProperty }}" id="{{ $fullProperty }}" value="{{ $value }}" />
+{{end}}

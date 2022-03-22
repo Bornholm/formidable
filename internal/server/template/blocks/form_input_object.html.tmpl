@@ -1,0 +1,5 @@
+{{define "form_input_object"}}
+<br />
+{{ $formItemData := formItemData . "" .Schema }}
+{{template "form_item" $formItemData}}
+{{end}}

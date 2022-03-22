@@ -1,0 +1,31 @@
+{{ define "form_input_array" }}
+    {{ $root := . }}
+    {{ $fullProperty := getFullProperty .Parent .Property }}
+    {{ $values := getValue .Defaults .Values $fullProperty }}
+    <table width="100%">
+        <tbody>
+            {{ range $index, $value := $values }}
+                {{ $itemFullProperty := printf "%s/%d" $fullProperty $index }}
+                {{ $itemProperty := printf "%d" $index }}
+                {{ $itemSchema := getItemSchema $root.Schema }}
+                {{ $formItemData := formItemData $root $itemProperty $itemSchema }}
+                
+                <tr>
+                    {{ template "form_row" $formItemData }}
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <input type="submit" name="del:{{ $fullProperty }}/{{$index}}" value="Supprimer" />
+                        <hr />
+                    </td>
+                </tr>
+            {{end}}
+            <tr>
+                <td colspan="2"></td>
+                <td align="right">
+                    <input type="submit" name="add:{{ $fullProperty }}/-" value="Ajouter" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{{ end }}
