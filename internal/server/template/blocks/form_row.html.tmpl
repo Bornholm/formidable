@@ -2,12 +2,12 @@
 {{ $fullProperty := getFullProperty .Parent .Property }}
 <tr>
     <td align="left" nowrap="">
-        <label for="{{ $fullProperty }}">
-            <strong>
+        <label for="{{ $fullProperty }}" class="block font-medium text-gray-900">
+            <strong class="text-lg">
                 {{ if .Schema.Title }}{{ .Schema.Title }}{{ else }}{{ .Property }}{{ end }}
             </strong>
             <br />
-            <span>{{ .Schema.Description }}</span>
+            <span class="text-sm">{{ .Schema.Description }}</span>
         </label>
     </td>
     <td align="left" nowrap="">
@@ -16,7 +16,7 @@
     <td>
         {{ $err := getPropertyError .Error $fullProperty }}
         {{if $err}}
-        <em>{{ $err.Message }}</em>
+        <em class="text-red-700 px-4 py-3">{{ $err.Message }}</em>
         {{end}}
     </td>
 </tr>

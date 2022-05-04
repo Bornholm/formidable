@@ -9,13 +9,16 @@
                 {{ $itemProperty := printf "%d" $index }}
                 {{ $itemSchema := getItemSchema $root.Schema }}
                 {{ $formItemData := formItemData $root $itemProperty $itemSchema }}
-                
                 <tr>
                     {{ template "form_row" $formItemData }}
                 </tr>
                 <tr>
-                    <td colspan="3">
-                        <input type="submit" name="del:{{ $fullProperty }}/{{$index}}" value="Supprimer" />
+                    <td></td>
+                    <td colspan="2">
+                        <input type="submit"
+                            class="bg-red-600 text-white mb-2 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-700 transition duration-300" 
+                            name="del:{{ $fullProperty }}/{{$index}}" 
+                            value="Supprimer" />
                         <hr />
                     </td>
                 </tr>
@@ -23,7 +26,11 @@
             <tr>
                 <td colspan="2"></td>
                 <td align="right">
-                    <input type="submit" name="add:{{ $fullProperty }}/-" value="Ajouter" />
+                    <input
+                        class="bg-blue-500 text-white mb-2 mt-2 px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-300"
+                        type="submit" 
+                        name="add:{{ $fullProperty }}/-" 
+                        value="Ajouter" />
                 </td>
             </tr>
         </tbody>

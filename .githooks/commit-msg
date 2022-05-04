@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -eo pipefail
+
+DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)"
+export PATH="${PATH}:${DIR}/../node_modules/.bin"
+
+function lint_commit_message {
+    local commit_message_file="$1"
+    cat "$commit_message_file" | commitlint
+}
+
+function main {
+    local commit_message_file="$1"
+    lint_commit_message "$commit_message_file"
+}
+
+main $@

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"path"
 	"strings"
 
 	"forge.cadoles.com/wpetit/formidable/internal/jsonpointer"
@@ -17,24 +18,22 @@ import (
 )
 
 var (
-	//go:embed layouts/* blocks/*
-	files   embed.FS
 	layouts map[string]*template.Template
 	blocks  map[string]string
 )
 
-func Load() error {
+func Load(files embed.FS, baseDir string) error {
 	if blocks == nil {
 		blocks = make(map[string]string)
 	}
 
-	blockFiles, err := fs.ReadDir(files, "blocks")
+	blockFiles, err := fs.ReadDir(files, path.Join(baseDir, "blocks"))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	for _, f := range blockFiles {
-		templateData, err := fs.ReadFile(files, "blocks/"+f.Name())
+		templateData, err := fs.ReadFile(files, path.Join(baseDir, "blocks/"+f.Name()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -42,13 +41,13 @@ func Load() error {
 		blocks[f.Name()] = string(templateData)
 	}
 
-	layoutFiles, err := fs.ReadDir(files, "layouts")
+	layoutFiles, err := fs.ReadDir(files, path.Join(baseDir, "layouts"))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	for _, f := range layoutFiles {
-		templateData, err := fs.ReadFile(files, "layouts/"+f.Name())
+		templateData, err := fs.ReadFile(files, path.Join(baseDir, "layouts/"+f.Name()))
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -116,12 +115,13 @@ func mergeHelpers(helpers ...template.FuncMap) template.FuncMap {
 }
 
 type FormItemData struct {
-	Parent   *FormItemData
-	Schema   *jsonschema.Schema
-	Property string
-	Error    *jsonschema.ValidationError
-	Values   interface{}
-	Defaults interface{}
+	Parent         *FormItemData
+	Schema         *jsonschema.Schema
+	Property       string
+	Error          *jsonschema.ValidationError
+	Values         interface{}
+	Defaults       interface{}
+	SuccessMessage string
 }
 
 func customHelpers(tpl *template.Template) template.FuncMap {

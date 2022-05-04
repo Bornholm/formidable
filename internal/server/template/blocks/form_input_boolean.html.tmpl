@@ -1,12 +1,22 @@
 {{define "form_input_boolean"}}
 {{ $fullProperty := getFullProperty .Parent .Property }}
 {{ $checked := getValue .Defaults .Values $fullProperty }}
-<label for="yes:{{ $fullProperty }}">
-    Yes
-    <input type="radio" id="yes:{{ $fullProperty }}" name="bool:{{ $fullProperty }}" value="yes" {{if $checked}}checked="yes"{{end}} />
+<label for="yes:{{ $fullProperty }}" class="inline-flex items-center mt-3">
+    <input type="radio"
+        class="h-5 w-5 text-gray-600"
+        id="yes:{{ $fullProperty }}" 
+        name="bool:{{ $fullProperty }}" 
+        value="yes" 
+        {{if $checked}}checked="yes"{{end}} />
+    <span class="ml-2 text-gray-700">Yes</span>
 </label>
-<label for="no:{{ $fullProperty }}">
-    No
-    <input type="radio" id="no:{{ $fullProperty }}" name="bool:{{ $fullProperty }}" value="no" {{if not $checked}}checked{{end}} />
+<label for="no:{{ $fullProperty }}" class="inline-flex items-center mt-3 ml-3">
+    <input type="radio"
+        class="h-5 w-5 text-gray-600"
+        id="no:{{ $fullProperty }}" 
+        name="bool:{{ $fullProperty }}" 
+        value="no" 
+        {{if not $checked}}checked{{end}} />
+    <span class="ml-2 text-gray-700">No</span>
 </label>
 {{end}}

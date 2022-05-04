@@ -1,0 +1,44 @@
+project_name: frmd
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
+    - make GITCHLOG_ARGS="--next-tag {{ incpatch .Version }}-next --output CHANGELOG.md" changelog
+builds:
+  - id: frmd
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s
+      - -w
+      - -X 'main.GitRef={{ .Commit }}'
+      - -X 'main.ProjectVersion={{ .Version }}' 
+      - -X 'main.BuildDate={{ .Date }}'
+    gcflags:
+      - -trimpath="${PWD}"
+    asmflags:
+      - -trimpath="${PWD}"
+    goos:
+      - linux
+      - windows
+      - darwin
+    main: ./cmd/frmd
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

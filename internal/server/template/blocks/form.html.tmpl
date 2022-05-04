@@ -3,17 +3,33 @@
     <table width="100%">
         <tbody>
             <tr>
-                <td align="left" nowrap=""></td>
+                <td align="left" nowrap="">
+                    <strong>{{ .Schema.Title }}</strong>
+                    <em>{{ .Schema.Description }}</em>
+                </td>
                 <td align="right" nowrap="">
-                    <input type="submit" name="submit" value="Enregistrer" />
+                    <input
+                        class="bg-green-600 text-white my-4 px-4 py-2 rounded-md text-xl font-medium hover:bg-green-700 transition duration-300" 
+                        type="submit" 
+                        name="submit" value="Enregistrer" />
                 </td>
             </tr>
         </tbody>
     </table>
-    <hr />
-    <strong>{{ .Schema.Title }}</strong>
-    <em>{{ .Schema.Description }}</em>
-    <hr />
+    {{ if .Error }}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <strong class="font-bold">There is some(s) error(s) !</strong>
+            <br />
+            <span class="block">{{ .Error.Message }}</span>
+        </div>
+    {{ end }}
+    {{ if .SuccessMessage }}
+        <div class="bg-green-100 border border-green-600 text-green-600 px-4 py-3 rounded relative">
+            <strong class="font-bold">Success !</strong>
+            <br />
+            <span class="block">{{ .SuccessMessage }}</span>
+        </div>
+    {{ end }}
     {{template "form_item" .}}
 </form>
 {{end}}

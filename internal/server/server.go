@@ -60,13 +60,18 @@ func (s *Server) run(parentCtx context.Context, addrs chan net.Addr, errs chan e
 		}
 	}()
 
-	if err := template.Load(); err != nil {
+	templates := getEmbeddedTemplates()
+
+	if err := template.Load(templates, "template"); err != nil {
 		errs <- errors.WithStack(err)
 
 		return
 	}
 
-	handler, err := route.NewHandler(s.schema, s.defaults, s.values)
+	assets := getEmbeddedAssets()
+	assetsHandler := http.FileServer(http.FS(assets))
+
+	handler, err := route.NewHandler(s.schema, s.defaults, s.values, assetsHandler)
 	if err != nil {
 		errs <- errors.WithStack(err)
 

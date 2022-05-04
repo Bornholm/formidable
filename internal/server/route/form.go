@@ -3,6 +3,7 @@ package route
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"forge.cadoles.com/wpetit/formidable/internal/jsonpointer"
@@ -66,6 +67,10 @@ func createHandleFormHandlerFunc(schema *jsonschema.Schema, defaults, values int
 			data.Error = validationErr
 		}
 
+		if data.Error == nil {
+			data.SuccessMessage = "Data updated."
+		}
+
 		if err := template.Exec("index.html.tmpl", w, data); err != nil {
 			panic(errors.WithStack(err))
 		}
@@ -89,6 +94,10 @@ func handleForm(form url.Values, schema *jsonschema.Schema, values interface{}) 
 
 		switch prefix {
 		case "bool":
+			if fieldValues[0] == "" {
+				continue
+			}
+
 			booVal, err := parseBoolean(fieldValues[0])
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not parse boolean field '%s'", property)
@@ -97,6 +106,23 @@ func handleForm(form url.Values, schema *jsonschema.Schema, values interface{}) 
 			pointer := jsonpointer.New(property)
 
 			values, err = pointer.Force(values, booVal)
+			if err != nil {
+				return nil, errors.Wrapf(err, "could not set property '%s' with value '%v'", property, fieldValues[0])
+			}
+
+		case "num":
+			if fieldValues[0] == "" {
+				continue
+			}
+
+			numVal, err := parseNumeric(fieldValues[0])
+			if err != nil {
+				return nil, errors.Wrapf(err, "could not parse numeric field '%s'", property)
+			}
+
+			pointer := jsonpointer.New(property)
+
+			values, err = pointer.Force(values, numVal)
 			if err != nil {
 				return nil, errors.Wrapf(err, "could not set property '%s' with value '%v'", property, fieldValues[0])
 			}
@@ -144,6 +170,15 @@ func parseBoolean(value string) (bool, error) {
 	default:
 		return false, errors.Errorf("unexpected boolean value '%s'", value)
 	}
+}
+
+func parseNumeric(value string) (float64, error) {
+	numVal, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+
+	return numVal, nil
 }
 
 func parseFieldName(name string) (string, string, error) {
