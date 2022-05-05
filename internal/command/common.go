@@ -1,11 +1,17 @@
 package command
 
 import (
-	"encoding/json"
+	"bytes"
 	"io"
+	"net/url"
 	"os"
-	"strings"
 
+	encjson "encoding/json"
+
+	"forge.cadoles.com/wpetit/formidable/internal/data"
+	"forge.cadoles.com/wpetit/formidable/internal/data/format/hcl"
+	"forge.cadoles.com/wpetit/formidable/internal/data/format/json"
+	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/file"
 	"forge.cadoles.com/wpetit/formidable/internal/def"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
@@ -22,13 +28,13 @@ func commonFlags() []cli.Flag {
 			Name:    "defaults",
 			Aliases: []string{"d"},
 			Usage:   "Default values as JSON or file path prefixed by '@'",
-			Value:   "{}",
+			Value:   "",
 		},
 		&cli.StringFlag{
 			Name:    "values",
 			Aliases: []string{"v"},
 			Usage:   "Current values as JSON or file path prefixed by '@'",
-			Value:   "{}",
+			Value:   "",
 		},
 		&cli.StringFlag{
 			Name:      "schema",
@@ -45,49 +51,43 @@ func commonFlags() []cli.Flag {
 	}
 }
 
-func loadJSONFlag(ctx *cli.Context, flagName string) (interface{}, error) {
+func loadURLFlag(ctx *cli.Context, flagName string) (interface{}, error) {
 	flagValue := ctx.String(flagName)
 
 	if flagValue == "" {
 		return nil, nil
 	}
 
-	if !strings.HasPrefix(flagValue, filePathPrefix) {
-		var value interface{}
+	loader := newLoader()
 
-		if err := json.Unmarshal([]byte(flagValue), &value); err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		return value, nil
+	url, err := url.Parse(flagValue)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	flagValue = strings.TrimPrefix(flagValue, filePathPrefix)
-
-	file, err := os.Open(flagValue)
+	reader, err := loader.Open(url)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	defer func() {
-		if err := file.Close(); err != nil {
+		if err := reader.Close(); err != nil {
 			panic(errors.WithStack(err))
 		}
 	}()
 
-	reader := json.NewDecoder(file)
+	decoder := newDecoder()
 
-	var values interface{}
-
-	if err := reader.Decode(&values); err != nil {
+	data, err := decoder.Decode(url, reader)
+	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return values, nil
+	return data, nil
 }
 
 func loadValues(ctx *cli.Context) (interface{}, error) {
-	values, err := loadJSONFlag(ctx, "values")
+	values, err := loadURLFlag(ctx, "values")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -96,16 +96,33 @@ func loadValues(ctx *cli.Context) (interface{}, error) {
 }
 
 func loadDefaults(ctx *cli.Context) (interface{}, error) {
-	values, err := loadJSONFlag(ctx, "defaults")
+	defaults, err := loadURLFlag(ctx, "defaults")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return values, nil
+	return defaults, nil
 }
 
 func loadSchema(ctx *cli.Context) (*jsonschema.Schema, error) {
 	schemaFlag := ctx.String("schema")
+
+	if schemaFlag == "" {
+		return def.Schema, nil
+	}
+
+	schemaTree, err := loadURLFlag(ctx, "schema")
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	// Reencode schema to JSON format
+	var buf bytes.Buffer
+	encoder := encjson.NewEncoder(&buf)
+
+	if err := encoder.Encode(schemaTree); err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	compiler := jsonschema.NewCompiler()
 
@@ -113,16 +130,11 @@ func loadSchema(ctx *cli.Context) (*jsonschema.Schema, error) {
 	compiler.AssertFormat = true
 	compiler.AssertContent = true
 
-	var (
-		schema *jsonschema.Schema
-		err    error
-	)
-
-	if schemaFlag == "" {
-		schema = def.Schema
-	} else {
-		schema, err = compiler.Compile(schemaFlag)
+	if err := compiler.AddResource(schemaFlag, &buf); err != nil {
+		return nil, errors.WithStack(err)
 	}
+
+	schema, err := compiler.Compile(schemaFlag)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -153,4 +165,17 @@ func outputWriter(ctx *cli.Context) (io.WriteCloser, error) {
 	}
 
 	return file, nil
+}
+
+func newLoader() *data.Loader {
+	return data.NewLoader(
+		file.NewLoaderHandler(),
+	)
+}
+
+func newDecoder() *data.Decoder {
+	return data.NewDecoder(
+		json.NewDecoderHandler(),
+		hcl.NewDecoderHandler(nil),
+	)
 }
