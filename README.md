@@ -26,14 +26,21 @@ It will download `frmd` to your current directory.
 |----|-----------|-------|
 |`FORMIDABLE_VERSION`|Formidable version to download|`latest`|
 |`FORMIDABLE_DESTDIR`|Formidable destination directory|`.`|
+### URLs
 
-## Usage
+Formidable uses URLs to define how to handle schemas/defaults/values.
 
-### Defining a schema
+For example, to edit a web available schema (in YAML), defaults from `stdin` (in JSON) and values from the local file system (in HCL):
 
-### Using default values
+```shell
+echo '{}' | frmd \
+    edit
+    --schema https://example.com/my-schema.yml \
+    --defaults stdin://local?format=json \
+    --values file:///my/file/absolute/path.hcl
+```
 
-### Handling values update
+The `?format=<json|yaml|hcl>` query variable allows to specify the file format when no file extension is available (for example when reading from `stdin`).
 
 ## Licence
 
