@@ -7,8 +7,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const FormatQueryParam = "format"
-
 type DecoderHandler interface {
 	URLMatcher
 	Decode(url *url.URL, reader io.Reader) (interface{}, error)

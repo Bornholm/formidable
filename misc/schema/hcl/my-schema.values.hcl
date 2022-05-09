@@ -1,4 +1,4 @@
 foo = {
-   bar = upper(totot)
+   bar = "totot"
    enabled = true
 }

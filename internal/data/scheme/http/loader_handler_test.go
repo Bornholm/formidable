@@ -1,52 +1,20 @@
-package file
+package http
 
 import (
 	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
-	"path/filepath"
 	"testing"
 
 	"github.com/pkg/errors"
 )
 
-const dummyFilePath = "../testdata/dummy.txt"
-
-var loaderHandlerTestCases []loaderHandlerTestCase
-
-func init() {
-	dummyFileAbsolutePath, err := filepath.Abs(dummyFilePath)
-	if err != nil {
-		panic(errors.WithStack(err))
-	}
-
-	loaderHandlerTestCases = []loaderHandlerTestCase{
-		{
-			URL:               SchemeFile + "://" + dummyFilePath,
-			ExpectMatch:       true,
-			ExpectOpenError:   false,
-			ExpectOpenContent: "dummy",
-		},
-		{
-			URL:               dummyFilePath,
-			ExpectMatch:       true,
-			ExpectOpenError:   false,
-			ExpectOpenContent: "dummy",
-		},
-		{
-			URL:               dummyFileAbsolutePath,
-			ExpectMatch:       true,
-			ExpectOpenError:   false,
-			ExpectOpenContent: "dummy",
-		},
-		{
-			URL:               SchemeFile + "://" + dummyFileAbsolutePath,
-			ExpectMatch:       true,
-			ExpectOpenError:   false,
-			ExpectOpenContent: "dummy",
-		},
-	}
-}
+const (
+	testDataDir = "../testdata"
+	dummyPath   = "dummy.txt"
+)
 
 type loaderHandlerTestCase struct {
 	URL               string
@@ -58,13 +26,25 @@ type loaderHandlerTestCase struct {
 func TestLoaderHandler(t *testing.T) {
 	t.Parallel()
 
-	handler := NewLoaderHandler()
+	staticHandler := http.FileServer(http.Dir(testDataDir))
+
+	server := httptest.NewServer(staticHandler)
+	defer server.Close()
+
+	loaderHandlerTestCases := []loaderHandlerTestCase{
+		{
+			URL:               server.URL + "/" + dummyPath,
+			ExpectMatch:       true,
+			ExpectOpenError:   false,
+			ExpectOpenContent: "dummy",
+		},
+	}
+
+	handler := NewLoaderHandler(server.Client())
 
 	for _, tc := range loaderHandlerTestCases {
 		func(tc loaderHandlerTestCase) {
 			t.Run(fmt.Sprintf("Load '%s'", tc.URL), func(t *testing.T) {
-				t.Parallel()
-
 				url, err := url.Parse(tc.URL)
 				if err != nil {
 					t.Fatal(errors.Wrapf(err, "could not parse url '%s'", tc.URL))

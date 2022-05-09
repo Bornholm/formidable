@@ -11,11 +11,16 @@ import (
 	"forge.cadoles.com/wpetit/formidable/internal/data"
 	"forge.cadoles.com/wpetit/formidable/internal/data/format/hcl"
 	"forge.cadoles.com/wpetit/formidable/internal/data/format/json"
+	"forge.cadoles.com/wpetit/formidable/internal/data/format/yaml"
 	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/file"
+	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/http"
+	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/stdin"
 	"forge.cadoles.com/wpetit/formidable/internal/def"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/urfave/cli/v2"
+
+	gohttp "net/http"
 )
 
 const (
@@ -170,6 +175,8 @@ func outputWriter(ctx *cli.Context) (io.WriteCloser, error) {
 func newLoader() *data.Loader {
 	return data.NewLoader(
 		file.NewLoaderHandler(),
+		http.NewLoaderHandler(gohttp.DefaultClient),
+		stdin.NewLoaderHandler(),
 	)
 }
 
@@ -177,5 +184,6 @@ func newDecoder() *data.Decoder {
 	return data.NewDecoder(
 		json.NewDecoderHandler(),
 		hcl.NewDecoderHandler(nil),
+		yaml.NewDecoderHandler(),
 	)
 }
