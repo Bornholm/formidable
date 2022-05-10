@@ -20,12 +20,13 @@ curl -sfL https://raw.githubusercontent.com/Bornholm/formidable/master/misc/scri
 
 It will download `frmd` to your current directory.
 
-#### Script available environment variables
+#### Install script environment variables
 
 |Name|Description|Default|
 |----|-----------|-------|
 |`FORMIDABLE_VERSION`|Formidable version to download|`latest`|
 |`FORMIDABLE_DESTDIR`|Formidable destination directory|`.`|
+
 ### URLs
 
 Formidable uses URLs to define how to handle schemas/defaults/values.
