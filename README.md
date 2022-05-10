@@ -46,9 +46,11 @@ echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
 #### `stdin://`
 
 > TODO: Write doc + example
+
 #### `http://` and `https://`
 
 > TODO: Write doc + example
+
 #### `file://`
 
 > TODO: Write doc + example
@@ -57,18 +59,24 @@ echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
 
 #### JSON
 
-- URL Query: `?format=json`
-- File extension: `.json`
+- **URL Query:** `?format=json`
+- **File extension:** `.json`
+- **As input:** yes
+- **As output:** yes
 
 #### YAML
 
-- URL Query: `?format=yaml`
-- File extension: `.yaml` or `.yml`
+- **URL Query:** `?format=yaml`
+- **File extension:** `.yaml` or `.yml`
+- **As input:** yes
+- **As output:** yes
 
 #### HCL
 
-- URL Query: `?format=hcl`
-- File extension: `.hcl`
+- **URL Query:** `?format=hcl`
+- **File extension:** `.hcl`
+- **As input:** yes
+- **As output:** no
 
 ### Available outputs
 
