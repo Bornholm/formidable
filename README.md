@@ -30,17 +30,59 @@ It will download `frmd` to your current directory.
 
 Formidable uses URLs to define how to handle schemas/defaults/values.
 
-For example, to edit a web available schema (in YAML), defaults from `stdin` (in JSON) and values from the local file system (in HCL):
+For example, to edit a schema (in YAML) from an HTTPS server, while readig default values from `stdin` (in JSON) and using effective values from the local file system (in HCL), outputing updates to `stdout`:
 
-```shell
+```bash
 echo '{}' | frmd \
     edit
-    --schema https://example.com/my-schema.yml \
-    --defaults stdin://local?format=json \
-    --values file:///my/file/absolute/path.hcl
+    --schema 'https://example.com/my-schema.yml' \
+    --defaults 'stdin://local?format=json' \
+    --values 'file:///my/file/absolute/path.hcl' \
+    --output 'stdout://local?format=json'
 ```
 
-The `?format=<json|yaml|hcl>` query variable allows to specify the file format when no file extension is available (for example when reading from `stdin`).
+### Available loaders
+
+#### `stdin://`
+
+> TODO: Write doc + example
+#### `http://` and `https://`
+
+> TODO: Write doc + example
+#### `file://`
+
+> TODO: Write doc + example
+
+### Available formats
+
+#### JSON
+
+- URL Query: `?format=json`
+- File extension: `.json`
+
+#### YAML
+
+- URL Query: `?format=yaml`
+- File extension: `.yaml` or `.yml`
+
+#### HCL
+
+- URL Query: `?format=hcl`
+- File extension: `.hcl`
+
+### Available outputs
+
+#### `stdout://` (default)
+
+> TODO: Write doc + example
+
+#### `file://`
+
+> TODO: Write doc + example
+
+#### `exec://`
+
+> TODO: Write doc + example
 
 ## Licence
 

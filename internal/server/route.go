@@ -1,4 +1,4 @@
-package route
+package server
 
 import (
 	"net/http"
@@ -12,68 +12,72 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
-func createRenderFormHandlerFunc(schema *jsonschema.Schema, defaults, values interface{}) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data := &template.FormItemData{
-			Parent:   nil,
-			Schema:   schema,
-			Property: "",
-			Defaults: defaults,
-			Values:   values,
+func (s *Server) serveFormReq(w http.ResponseWriter, r *http.Request) {
+	data := &template.FormItemData{
+		Parent:   nil,
+		Schema:   s.schema,
+		Property: "",
+		Defaults: s.defaults,
+		Values:   s.values,
+	}
+
+	if err := s.schema.Validate(data.Values); err != nil {
+		validationErr, ok := err.(*jsonschema.ValidationError)
+		if !ok {
+			panic(errors.Wrap(err, "could not validate values"))
 		}
 
-		if err := schema.Validate(data.Values); err != nil {
-			validationErr, ok := err.(*jsonschema.ValidationError)
-			if !ok {
-				panic(errors.Wrap(err, "could not validate values"))
-			}
+		data.Error = validationErr
+	}
 
-			data.Error = validationErr
-		}
-
-		if err := template.Exec("index.html.tmpl", w, data); err != nil {
-			panic(errors.WithStack(err))
-		}
+	if err := template.Exec("index.html.tmpl", w, data); err != nil {
+		panic(errors.WithStack(err))
 	}
 }
 
-func createHandleFormHandlerFunc(schema *jsonschema.Schema, defaults, values interface{}) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data := &template.FormItemData{
-			Parent:   nil,
-			Schema:   schema,
-			Property: "",
-			Defaults: defaults,
-			Values:   values,
-		}
+func (s *Server) handleFormReq(w http.ResponseWriter, r *http.Request) {
+	data := &template.FormItemData{
+		Parent:   nil,
+		Schema:   s.schema,
+		Property: "",
+		Defaults: s.defaults,
+		Values:   s.values,
+	}
 
-		if err := r.ParseForm(); err != nil {
-			panic(errors.WithStack(err))
-		} else {
-			values, err = handleForm(r.Form, schema, values)
-			if err != nil {
-				panic(errors.WithStack(err))
-			}
+	var values interface{}
 
-			data.Values = values
-		}
-
-		if err := schema.Validate(data.Values); err != nil {
-			validationErr, ok := err.(*jsonschema.ValidationError)
-			if !ok {
-				panic(errors.Wrap(err, "could not validate values"))
-			}
-
-			data.Error = validationErr
-		}
-
-		if data.Error == nil {
-			data.SuccessMessage = "Data updated."
-		}
-
-		if err := template.Exec("index.html.tmpl", w, data); err != nil {
+	if err := r.ParseForm(); err != nil {
+		panic(errors.WithStack(err))
+	} else {
+		values, err = handleForm(r.Form, s.schema, values)
+		if err != nil {
 			panic(errors.WithStack(err))
 		}
+
+		data.Values = values
+	}
+
+	if err := s.schema.Validate(data.Values); err != nil {
+		validationErr, ok := err.(*jsonschema.ValidationError)
+		if !ok {
+			panic(errors.Wrap(err, "could not validate values"))
+		}
+
+		data.Error = validationErr
+	}
+
+	if data.Error == nil {
+		if s.onUpdate != nil {
+			if err := s.onUpdate(data.Values); err != nil {
+				panic(errors.Wrap(err, "could not update values"))
+			}
+		}
+
+		data.SuccessMessage = "Data updated."
+	}
+
+	if err := template.Exec("index.html.tmpl", w, data); err != nil {
+		panic(errors.WithStack(err))
 	}
 }
 

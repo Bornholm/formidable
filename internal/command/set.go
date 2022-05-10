@@ -1,7 +1,6 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -44,23 +43,17 @@ func Set() *cli.Command {
 
 			pointer := jsonpointer.New(rawPointer)
 
-			var value interface{}
-
-			if err := json.Unmarshal([]byte(rawValue), &value); err != nil {
-				return errors.Wrapf(err, "could not parse json '%s'", rawValue)
-			}
-
 			var updatedValues interface{}
 
 			force := ctx.Bool("force")
 
 			if force {
-				updatedValues, err = pointer.Force(values, value)
+				updatedValues, err = pointer.Force(values, rawValue)
 				if err != nil {
 					return errors.Wrapf(err, "could not force value '%v' to pointer '%v'", rawValue, rawPointer)
 				}
 			} else {
-				updatedValues, err = pointer.Set(values, value)
+				updatedValues, err = pointer.Set(values, rawValue)
 				if err != nil {
 					return errors.Wrapf(err, "could not set value '%v' to pointer '%v'", rawValue, rawPointer)
 				}
@@ -76,17 +69,8 @@ func Set() *cli.Command {
 				return errors.Wrap(err, "could not validate resulting json")
 			}
 
-			output, err := outputWriter(ctx)
-			if err != nil {
-				return errors.Wrap(err, "could not create output writer")
-			}
-
-			encoder := json.NewEncoder(output)
-
-			encoder.SetIndent("", "  ")
-
-			if err := encoder.Encode(updatedValues); err != nil {
-				return errors.Wrap(err, "could not write to output")
+			if err := outputValues(ctx, updatedValues); err != nil {
+				return errors.Wrap(err, "could not output updated values")
 			}
 
 			return nil

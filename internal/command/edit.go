@@ -52,6 +52,13 @@ func Edit() *cli.Command {
 				server.WithSchema(schema),
 				server.WithValues(values),
 				server.WithDefaults(defaults),
+				server.WithOnUpdate(func(values interface{}) error {
+					if err := outputValues(ctx, values); err != nil {
+						return errors.Wrap(err, "could not output updated values")
+					}
+
+					return nil
+				}),
 			)
 
 			addrs, srvErrs := srv.Start(srvCtx)

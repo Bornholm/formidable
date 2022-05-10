@@ -1,7 +1,6 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -49,17 +48,8 @@ func Delete() *cli.Command {
 				return errors.Wrap(err, "could not validate resulting json")
 			}
 
-			output, err := outputWriter(ctx)
-			if err != nil {
-				return errors.Wrap(err, "could not create output writer")
-			}
-
-			encoder := json.NewEncoder(output)
-
-			encoder.SetIndent("", "  ")
-
-			if err := encoder.Encode(updatedValues); err != nil {
-				return errors.Wrap(err, "could not write to output")
+			if err := outputValues(ctx, updatedValues); err != nil {
+				return errors.Wrap(err, "could not output updated values")
 			}
 
 			return nil

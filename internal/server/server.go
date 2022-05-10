@@ -7,8 +7,8 @@ import (
 	"net"
 	"net/http"
 
-	"forge.cadoles.com/wpetit/formidable/internal/server/route"
 	"forge.cadoles.com/wpetit/formidable/internal/server/template"
+	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
@@ -19,7 +19,10 @@ type Server struct {
 	schema   *jsonschema.Schema
 	defaults interface{}
 	values   interface{}
+	onUpdate OnUpdateFunc
 }
+
+type OnUpdateFunc func(values interface{}) error
 
 func (s *Server) Start(ctx context.Context) (<-chan net.Addr, <-chan error) {
 	errs := make(chan error)
@@ -71,16 +74,15 @@ func (s *Server) run(parentCtx context.Context, addrs chan net.Addr, errs chan e
 	assets := getEmbeddedAssets()
 	assetsHandler := http.FileServer(http.FS(assets))
 
-	handler, err := route.NewHandler(s.schema, s.defaults, s.values, assetsHandler)
-	if err != nil {
-		errs <- errors.WithStack(err)
+	router := chi.NewRouter()
 
-		return
-	}
+	router.Get("/", s.serveFormReq)
+	router.Post("/", s.handleFormReq)
+	router.Handle("/assets/*", assetsHandler)
 
 	log.Println("http server listening")
 
-	if err := http.Serve(listener, handler); err != nil && !errors.Is(err, net.ErrClosed) {
+	if err := http.Serve(listener, router); err != nil && !errors.Is(err, net.ErrClosed) {
 		errs <- errors.WithStack(err)
 	}
 
@@ -99,5 +101,6 @@ func New(funcs ...OptionFunc) *Server {
 		schema:   opt.Schema,
 		defaults: opt.Defaults,
 		values:   opt.Values,
+		onUpdate: opt.OnUpdate,
 	}
 }

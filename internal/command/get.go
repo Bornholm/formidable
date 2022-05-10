@@ -1,7 +1,6 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -50,17 +49,8 @@ func Get() *cli.Command {
 				return errors.Wrapf(err, "could not get value from pointer '%v'", rawPointer)
 			}
 
-			output, err := outputWriter(ctx)
-			if err != nil {
-				return errors.Wrap(err, "could not create output writer")
-			}
-
-			encoder := json.NewEncoder(output)
-
-			encoder.SetIndent("", "  ")
-
-			if err := encoder.Encode(value); err != nil {
-				return errors.Wrap(err, "could not write to output")
+			if err := outputValues(ctx, value); err != nil {
+				return errors.Wrap(err, "could not output updated values")
 			}
 
 			return nil

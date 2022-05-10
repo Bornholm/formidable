@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"net/url"
-	"os"
 
 	encjson "encoding/json"
 
@@ -15,6 +14,9 @@ import (
 	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/file"
 	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/http"
 	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/stdin"
+	"forge.cadoles.com/wpetit/formidable/internal/data/updater/exec"
+	fileUpdater "forge.cadoles.com/wpetit/formidable/internal/data/updater/file"
+	"forge.cadoles.com/wpetit/formidable/internal/data/updater/stdout"
 	"forge.cadoles.com/wpetit/formidable/internal/def"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
@@ -50,8 +52,8 @@ func commonFlags() []cli.Flag {
 		&cli.StringFlag{
 			Name:    "output",
 			Aliases: []string{"o", "out"},
-			Value:   "-",
-			Usage:   "Output modified values to `output_file` (or '-' for stdout, the default)",
+			Value:   "stdout://local?format=json",
+			Usage:   "Output modified values to specified URL",
 		},
 	}
 }
@@ -147,29 +149,39 @@ func loadSchema(ctx *cli.Context) (*jsonschema.Schema, error) {
 	return schema, nil
 }
 
-const OutputStdout = "-"
+func outputValues(ctx *cli.Context, values interface{}) error {
+	outputFlag := ctx.String("output")
 
-type noopWriteCloser struct {
-	io.Writer
-}
-
-func (c *noopWriteCloser) Close() error {
-	return nil
-}
-
-func outputWriter(ctx *cli.Context) (io.WriteCloser, error) {
-	output := ctx.String("output")
-
-	if output == OutputStdout {
-		return &noopWriteCloser{ctx.App.Writer}, nil
-	}
-
-	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE, 0o644)
+	url, err := url.Parse(outputFlag)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
-	return file, nil
+	encoder := newEncoder()
+
+	reader, err := encoder.Encode(url, values)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	updater := newUpdater()
+
+	writer, err := updater.Update(url)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	defer func() {
+		if err := writer.Close(); err != nil {
+			panic(errors.WithStack(err))
+		}
+	}()
+
+	if _, err := io.Copy(writer, reader); err != nil && !errors.Is(err, io.EOF) {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
 func newLoader() *data.Loader {
@@ -185,5 +197,20 @@ func newDecoder() *data.Decoder {
 		json.NewDecoderHandler(),
 		hcl.NewDecoderHandler(nil),
 		yaml.NewDecoderHandler(),
+	)
+}
+
+func newUpdater() *data.Updater {
+	return data.NewUpdater(
+		stdout.NewUpdaterHandler(),
+		fileUpdater.NewUpdaterHandler(),
+		exec.NewUpdaterHandler(),
+	)
+}
+
+func newEncoder() *data.Encoder {
+	return data.NewEncoder(
+		json.NewEncoderHandler(),
+		yaml.NewEncoderHandler(),
 	)
 }

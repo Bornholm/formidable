@@ -11,6 +11,7 @@ type Option struct {
 	Schema   *jsonschema.Schema
 	Values   interface{}
 	Defaults interface{}
+	OnUpdate OnUpdateFunc
 }
 
 type OptionFunc func(*Option)
@@ -45,5 +46,11 @@ func WithValues(values interface{}) OptionFunc {
 func WithDefaults(defaults interface{}) OptionFunc {
 	return func(opt *Option) {
 		opt.Defaults = defaults
+	}
+}
+
+func WithOnUpdate(onUpdate OnUpdateFunc) OptionFunc {
+	return func(opt *Option) {
+		opt.OnUpdate = onUpdate
 	}
 }
