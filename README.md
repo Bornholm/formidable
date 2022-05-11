@@ -30,10 +30,10 @@ It will download `frmd` to your current directory.
 
 Formidable uses URLs to define how to handle schemas/defaults/values.
 
-For example, to edit a schema (in YAML) from an HTTPS server, while readig default values from `stdin` (in JSON) and using effective values from the local file system (in HCL), outputing updates to `stdout`:
+For example, to edit with Firefox a schema (in YAML) from an HTTPS server, while readig default values from `stdin` (in JSON) and using effective values from the local file system (in HCL), outputing updates to `stdout`:
 
 ```bash
-echo '{}' | frmd \
+echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
     edit
     --schema 'https://example.com/my-schema.yml' \
     --defaults 'stdin://local?format=json' \
