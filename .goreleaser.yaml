@@ -6,6 +6,7 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
     - make GITCHLOG_ARGS="--next-tag {{ incpatch .Version }}-next --output CHANGELOG.md" changelog
+    - make tailwind
 builds:
   - id: frmd
     env:
