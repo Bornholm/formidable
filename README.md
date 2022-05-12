@@ -20,12 +20,13 @@ curl -sfL https://raw.githubusercontent.com/Bornholm/formidable/master/misc/scri
 
 It will download `frmd` to your current directory.
 
-#### Script available environment variables
+#### Install script environment variables
 
 |Name|Description|Default|
 |----|-----------|-------|
 |`FORMIDABLE_VERSION`|Formidable version to download|`latest`|
 |`FORMIDABLE_DESTDIR`|Formidable destination directory|`.`|
+
 ### URLs
 
 Formidable uses URLs to define how to handle schemas/defaults/values.
@@ -46,9 +47,11 @@ echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
 #### `stdin://`
 
 > TODO: Write doc + example
+
 #### `http://` and `https://`
 
 > TODO: Write doc + example
+
 #### `file://`
 
 > TODO: Write doc + example
@@ -57,18 +60,24 @@ echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
 
 #### JSON
 
-- URL Query: `?format=json`
-- File extension: `.json`
+- **URL Query:** `?format=json`
+- **File extension:** `.json`
+- **As input:** yes
+- **As output:** yes
 
 #### YAML
 
-- URL Query: `?format=yaml`
-- File extension: `.yaml` or `.yml`
+- **URL Query:** `?format=yaml`
+- **File extension:** `.yaml` or `.yml`
+- **As input:** yes
+- **As output:** yes
 
 #### HCL
 
-- URL Query: `?format=hcl`
-- File extension: `.hcl`
+- **URL Query:** `?format=hcl`
+- **File extension:** `.hcl`
+- **As input:** yes
+- **As output:** no
 
 ### Available outputs
 

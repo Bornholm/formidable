@@ -23,11 +23,11 @@ lint: ## Lint sources code
 
 build: build-frmd ## Build artefacts
 
-build-frmd: ## Build executable
+build-frmd: deps tailwind ## Build executable
 	CGO_ENABLED=0 go build -v -o ./bin/frmd ./cmd/frmd
 
 .PHONY: tailwind
-tailwind:
+tailwind: deps
 	npx tailwindcss -i ./internal/server/assets/src/main.css -o ./internal/server/assets/dist/main.css $(TAILWINDCSS_ARGS)
 
 internal/server/assets/dist/main.css: tailwind
