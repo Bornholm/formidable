@@ -17,11 +17,28 @@ import (
 func Edit() *cli.Command {
 	flags := commonFlags()
 
-	flags = append(flags, &cli.StringFlag{
-		Name:    "browser",
-		EnvVars: []string{"FORMIDABLE_BROWSER"},
-		Value:   "w3m",
-	})
+	flags = append(flags,
+		&cli.StringFlag{
+			Name:    "browser",
+			EnvVars: []string{"FORMIDABLE_BROWSER"},
+			Value:   "w3m",
+		},
+		&cli.StringFlag{
+			Name:    "http-host",
+			EnvVars: []string{"FORMIDABLE_HTTP_HOST"},
+			Value:   "127.0.0.1",
+		},
+		&cli.UintFlag{
+			Name:    "http-port",
+			EnvVars: []string{"FORMIDABLE_HTTP_PORT"},
+			Value:   0,
+		},
+		&cli.BoolFlag{
+			Name:    "no-browser",
+			EnvVars: []string{"FORMIDABLE_NO_BROWSER"},
+			Value:   false,
+		},
+	)
 
 	return &cli.Command{
 		Name:  "edit",
@@ -29,6 +46,9 @@ func Edit() *cli.Command {
 		Flags: flags,
 		Action: func(ctx *cli.Context) error {
 			browser := ctx.String("browser")
+			noBrowser := ctx.Bool("no-browser")
+			httpPort := ctx.Uint("http-port")
+			httpHost := ctx.String("http-host")
 
 			schema, err := loadSchema(ctx)
 			if err != nil {
@@ -49,6 +69,7 @@ func Edit() *cli.Command {
 			defer srvCancel()
 
 			srv := server.New(
+				server.WithAddress(httpHost, httpPort),
 				server.WithSchema(schema),
 				server.WithValues(values),
 				server.WithDefaults(defaults),
@@ -68,38 +89,48 @@ func Edit() *cli.Command {
 
 			log.Printf("listening on %s", url)
 
-			cmdErrs := make(chan error)
-			cmdCtx, cmdCancel := context.WithCancel(ctx.Context)
-			defer cmdCancel()
+			browserErrs := make(chan error)
+			browserCtx, browserCancel := context.WithCancel(ctx.Context)
+			defer browserCancel()
 
-			go func() {
-				defer func() {
-					close(cmdErrs)
-				}()
-
-				cmd := exec.CommandContext(cmdCtx, browser, url)
-
-				cmd.Stdin = os.Stdin
-				cmd.Stderr = os.Stderr
-				cmd.Stdout = os.Stdout
-				cmd.Env = os.Environ()
-
-				if err := cmd.Run(); err != nil {
-					cmdErrs <- errors.WithStack(err)
-				}
-			}()
+			if !noBrowser {
+				browserErrs = startBrowser(browserCtx, browser, url)
+			}
 
 			select {
-			case err := <-cmdErrs:
+			case err := <-browserErrs:
 				srvCancel()
 
 				return errors.WithStack(err)
 
 			case err := <-srvErrs:
-				cmdCancel()
+				browserCancel()
 
 				return errors.WithStack(err)
 			}
 		},
 	}
+}
+
+func startBrowser(ctx context.Context, browser, url string) chan error {
+	cmdErrs := make(chan error)
+
+	go func() {
+		defer func() {
+			close(cmdErrs)
+		}()
+
+		cmd := exec.CommandContext(ctx, browser, url)
+
+		cmd.Stdin = os.Stdin
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		cmd.Env = os.Environ()
+
+		if err := cmd.Run(); err != nil {
+			cmdErrs <- errors.WithStack(err)
+		}
+	}()
+
+	return cmdErrs
 }
