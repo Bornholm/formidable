@@ -4,3 +4,4 @@
 /internal/server/assets/dist/*
 dist/
 /CHANGELOG.md
+/tools
