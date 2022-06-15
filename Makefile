@@ -15,8 +15,18 @@ help: ## Display this help
 watch: deps ## Watching updated files - live reload
 	( set -o allexport && source .env && set +o allexport && go run -mod=readonly github.com/cortesi/modd/cmd/modd@latest )
 
-test: deps ## Executing tests
+.PHONY: help
+test: test-go test-install-script ## Executing tests
+
+test-go: deps
 	( set -o allexport && source .env && set +o allexport && go test -v -race -count=1 $(GOTEST_ARGS) ./... )
+
+test-install-script: tools/bin/bash_unit
+	tools/bin/bash_unit ./misc/script/test_install.sh
+
+tools/bin/bash_unit:
+	mkdir -p tools/bin
+	cd tools/bin && bash <(curl -s https://raw.githubusercontent.com/pgrange/bash_unit/master/install.sh)	
 
 lint: ## Lint sources code
 	golangci-lint run --enable-all $(LINT_ARGS)
