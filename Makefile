@@ -7,6 +7,7 @@ GORELEASER_VERSION ?= v1.8.3
 GORELEASER_ARGS ?= --auto-snapshot --rm-dist
 GITCHLOG_ARGS ?=
 SHELL := /bin/bash
+RUN_INSTALL_TESTS ?= yes
 
 .PHONY: help
 help: ## Display this help
@@ -15,8 +16,12 @@ help: ## Display this help
 watch: deps ## Watching updated files - live reload
 	( set -o allexport && source .env && set +o allexport && go run -mod=readonly github.com/cortesi/modd/cmd/modd@latest )
 
-.PHONY: help
-test: test-go test-install-script ## Executing tests
+.PHONY: test
+test: test-go ## Executing tests
+
+ifeq ($(RUN_INSTALL_TESTS), yes)
+test: test-install-script
+endif
 
 test-go: deps
 	( set -o allexport && source .env && set +o allexport && go test -v -race -count=1 $(GOTEST_ARGS) ./... )
