@@ -6,6 +6,8 @@ Web-based - but terminal compatible ! - little form editor using [JSONSchema](ht
 
 The generated web UI does not use Javascript and can be used with terminal browsers like [w3m](https://en.wikipedia.org/wiki/W3m) or [lynx](https://en.wikipedia.org/wiki/Lynx_(web_browser)).
 
+> ⚠ Formidable is currently in a very alpha stage ! Expect breaking changes...
+
 ## Install
 
 ### Manually
@@ -92,6 +94,10 @@ echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
 #### `exec://`
 
 > TODO: Write doc + example
+
+## Changelog
+
+[See `CHANGELOG.md`](./CHANGELOG.md)
 
 ## Licence
 

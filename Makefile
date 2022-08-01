@@ -9,6 +9,8 @@ GITCHLOG_ARGS ?=
 SHELL := /bin/bash
 RUN_INSTALL_TESTS ?= yes
 
+FORMIDABLE_VERSION := 0.0.5
+
 .PHONY: help
 help: ## Display this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -60,9 +62,31 @@ node_modules:
 release: deps
 	( set -o allexport && source .env && set +o allexport && VERSION=$(GORELEASER_VERSION) curl -sfL https://goreleaser.com/static/run | bash /dev/stdin $(GORELEASER_ARGS) )
 
+.PHONY: start-release
+start-release:
+	#git flow release start $(FORMIDABLE_VERSION)
+
+	# Update package.json version
+	jq '.version = "$(FORMIDABLE_VERSION)"' package.json | sponge package.json
+	git add  package.json
+	git commit -m "chore: bump to version $(FORMIDABLE_VERSION)"
+
+	# Generate updated changelog
+	$(MAKE) GITCHLOG_ARGS='--next-tag $(FORMIDABLE_VERSION)' changelog
+	git add CHANGELOG.md
+	git commit -m "chore: update changelog for version $(FORMIDABLE_VERSION)"
+
+	echo "Commit you additional modifications then execute 'make finish-release'"
+
+.PHONY: finish-release
+finish-release:
+	git flow release finish -m "v$(FORMIDABLE_VERSION)"
+	git push --all
+	git push --tags
+
 .PHONY: changelog
 changelog:
-	go run -mod=readonly github.com/git-chglog/git-chglog/cmd/git-chglog@v0.15.1 $(GITCHLOG_ARGS)
+	go run -mod=readonly github.com/git-chglog/git-chglog/cmd/git-chglog@v0.15.1 $(GITCHLOG_ARGS) > CHANGELOG.md
 
 install-git-hooks:
 	git config core.hooksPath .githooks
