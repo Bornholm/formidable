@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
+	"time"
 
 	"forge.cadoles.com/wpetit/formidable/internal/command"
 	"github.com/pkg/errors"
@@ -16,14 +16,20 @@ import (
 var (
 	GitRef         = "unknown"
 	ProjectVersion = "unknown"
-	BuildDate      = "unknown"
+	BuildDate      = time.Now().UTC().Format(time.RFC3339)
 )
 
 func main() {
 	ctx := context.Background()
 
+	compiled, err := time.Parse(time.RFC3339, BuildDate)
+	if err != nil {
+		panic(errors.Wrapf(err, "could not parse build date '%s'", BuildDate))
+	}
+
 	app := &cli.App{
-		Version:  strings.ToLower(fmt.Sprintf("%s (git-ref: %s, build-date: %s)", ProjectVersion, GitRef, BuildDate)),
+		Version:  fmt.Sprintf("%s (%s, %s)", ProjectVersion, GitRef, BuildDate),
+		Compiled: compiled,
 		Name:     "frmd",
 		Usage:    "JSON Schema based cli forms",
 		Commands: command.Root(),
