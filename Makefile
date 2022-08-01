@@ -41,7 +41,15 @@ lint: ## Lint sources code
 build: build-frmd ## Build artefacts
 
 build-frmd: deps tailwind ## Build executable
-	CGO_ENABLED=0 go build -v -o ./bin/frmd ./cmd/frmd
+	CGO_ENABLED=0 go build \
+		-v \
+		-ldflags "\
+			-X 'main.GitRef=$(shell git rev-parse --short HEAD)' \
+			-X 'main.ProjectVersion=$(shell git describe --always)' \
+			-X 'main.BuildDate=$(shell date --utc --rfc-3339=seconds)' \
+		" \
+		-o ./bin/frmd \
+		./cmd/frmd
 
 .PHONY: tailwind
 tailwind: deps
