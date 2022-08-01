@@ -36,20 +36,20 @@ func commonFlags() []cli.Flag {
 		&cli.StringFlag{
 			Name:    "defaults",
 			Aliases: []string{"d"},
-			Usage:   "Default values as JSON or file path prefixed by '@'",
+			Usage:   "Use `defaults_url` as defaults",
 			Value:   "",
 		},
 		&cli.StringFlag{
 			Name:    "values",
 			Aliases: []string{"v"},
-			Usage:   "Current values as JSON or file path prefixed by '@'",
+			Usage:   "Use `values_url` as values",
 			Value:   "",
 		},
 		&cli.StringFlag{
-			Name:      "schema",
-			Aliases:   []string{"s"},
-			Usage:     "Use `schema_file` as schema",
-			TakesFile: true,
+			Name:    "schema",
+			Aliases: []string{"s"},
+			Usage:   "Use `schema_url` as schema",
+			Value:   "",
 		},
 		&cli.StringFlag{
 			Name:    "output",
