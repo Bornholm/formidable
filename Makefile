@@ -7,6 +7,9 @@ GORELEASER_VERSION ?= v1.8.3
 GORELEASER_ARGS ?= --auto-snapshot --rm-dist
 GITCHLOG_ARGS ?=
 SHELL := /bin/bash
+RUN_INSTALL_TESTS ?= yes
+
+FORMIDABLE_VERSION := 0.0.5
 
 .PHONY: help
 help: ## Display this help
@@ -15,8 +18,12 @@ help: ## Display this help
 watch: deps ## Watching updated files - live reload
 	( set -o allexport && source .env && set +o allexport && go run -mod=readonly github.com/cortesi/modd/cmd/modd@latest )
 
-.PHONY: help
-test: test-go test-install-script ## Executing tests
+.PHONY: test
+test: test-go ## Executing tests
+
+ifeq ($(RUN_INSTALL_TESTS), yes)
+test: test-install-script
+endif
 
 test-go: deps
 	( set -o allexport && source .env && set +o allexport && go test -v -race -count=1 $(GOTEST_ARGS) ./... )
@@ -55,9 +62,31 @@ node_modules:
 release: deps
 	( set -o allexport && source .env && set +o allexport && VERSION=$(GORELEASER_VERSION) curl -sfL https://goreleaser.com/static/run | bash /dev/stdin $(GORELEASER_ARGS) )
 
+.PHONY: start-release
+start-release:
+	#git flow release start $(FORMIDABLE_VERSION)
+
+	# Update package.json version
+	jq '.version = "$(FORMIDABLE_VERSION)"' package.json | sponge package.json
+	git add  package.json
+	git commit -m "chore: bump to version $(FORMIDABLE_VERSION)"
+
+	# Generate updated changelog
+	$(MAKE) GITCHLOG_ARGS='--next-tag $(FORMIDABLE_VERSION)' changelog
+	git add CHANGELOG.md
+	git commit -m "chore: update changelog for version $(FORMIDABLE_VERSION)"
+
+	echo "Commit you additional modifications then execute 'make finish-release'"
+
+.PHONY: finish-release
+finish-release:
+	git flow release finish -m "v$(FORMIDABLE_VERSION)"
+	git push --all
+	git push --tags
+
 .PHONY: changelog
 changelog:
-	go run -mod=readonly github.com/git-chglog/git-chglog/cmd/git-chglog@v0.15.1 $(GITCHLOG_ARGS)
+	go run -mod=readonly github.com/git-chglog/git-chglog/cmd/git-chglog@v0.15.1 $(GITCHLOG_ARGS) > CHANGELOG.md
 
 install-git-hooks:
 	git config core.hooksPath .githooks
