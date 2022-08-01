@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"forge.cadoles.com/wpetit/formidable/internal/command"
 	"github.com/pkg/errors"
@@ -22,6 +23,7 @@ func main() {
 	ctx := context.Background()
 
 	app := &cli.App{
+		Version:  strings.ToLower(fmt.Sprintf("%s (git-ref: %s, build-date: %s)", ProjectVersion, GitRef, BuildDate)),
 		Name:     "frmd",
 		Usage:    "JSON Schema based cli forms",
 		Commands: command.Root(),
