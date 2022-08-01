@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/url"
+	"os"
 
 	encjson "encoding/json"
 
@@ -173,7 +174,7 @@ func outputValues(ctx *cli.Context, values interface{}) error {
 	}
 
 	defer func() {
-		if err := writer.Close(); err != nil {
+		if err := writer.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
 			panic(errors.WithStack(err))
 		}
 	}()
