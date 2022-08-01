@@ -15,9 +15,21 @@ func (h *UpdaterHandler) Match(url *url.URL) bool {
 }
 
 func (u *UpdaterHandler) Update(url *url.URL) (io.WriteCloser, error) {
-	return os.Stdout, nil
+	return &stdoutFakeCloser{}, nil
 }
 
 func NewUpdaterHandler() *UpdaterHandler {
 	return &UpdaterHandler{}
+}
+
+type stdoutFakeCloser struct {
+	io.WriteCloser
+}
+
+func (c *stdoutFakeCloser) Write(p []byte) (n int, err error) {
+	return os.Stdout.Write(p)
+}
+
+func (c *stdoutFakeCloser) Close() error {
+	return nil
 }
