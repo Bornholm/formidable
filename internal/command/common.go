@@ -16,6 +16,7 @@ import (
 	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/stdin"
 	"forge.cadoles.com/wpetit/formidable/internal/data/updater/exec"
 	fileUpdater "forge.cadoles.com/wpetit/formidable/internal/data/updater/file"
+	"forge.cadoles.com/wpetit/formidable/internal/data/updater/null"
 	"forge.cadoles.com/wpetit/formidable/internal/data/updater/stdout"
 	"forge.cadoles.com/wpetit/formidable/internal/def"
 	"github.com/pkg/errors"
@@ -205,6 +206,7 @@ func newUpdater() *data.Updater {
 		stdout.NewUpdaterHandler(),
 		fileUpdater.NewUpdaterHandler(),
 		exec.NewUpdaterHandler(),
+		null.NewUpdaterHandler(),
 	)
 }
 
