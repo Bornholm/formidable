@@ -1,4 +1,22 @@
 
+<a name="0.0.6"></a>
+## [0.0.6](https://github.com/Bornholm/formidable/compare/0.0.5...0.0.6) (2022-09-27)
+
+### Bug Fixes
+
+* update common flags definition
+* ignore ErrClosed in deferred func
+
+### Features
+
+* aggregate defaults and values
+* prevent stdout close
+* add null:// update handler
+* use --debug flag for error more verbose output
+* expose build informations when using --version flag
+* expose version in frmd binary
+
+
 <a name="0.0.5"></a>
 ## [0.0.5](https://github.com/Bornholm/formidable/compare/0.0.4...0.0.5) (2022-08-01)
 
