@@ -33,7 +33,12 @@ func TestPointerDelete(t *testing.T) {
 			{
 				"nestedObject": {
 					"foo": [
-						"bar"
+						"bar",
+						{
+							"prop1": {
+								"subProp": 1
+							}
+						}
 					]
 				}
 			}`,
@@ -45,7 +50,8 @@ func TestPointerDelete(t *testing.T) {
 			{
 			  "nestedObject": {
 			    "foo": [
-			      "bar"
+			      "bar",
+				  0
 			    ]
 			  }
 			}`,

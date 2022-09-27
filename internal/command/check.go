@@ -2,23 +2,21 @@ package command
 
 import (
 	"fmt"
-	"os"
 
-	"forge.cadoles.com/wpetit/formidable/internal/jsonpointer"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 	"github.com/urfave/cli/v2"
 )
 
-func Get() *cli.Command {
+func Check() *cli.Command {
 	flags := []cli.Flag{}
 
 	flags = append(flags, commonFlags()...)
 
 	return &cli.Command{
-		Name:  "get",
-		Usage: "Get value at specific path",
+		Name:  "check",
+		Usage: "Check values with the given schema",
 		Flags: flags,
 		Action: func(ctx *cli.Context) error {
 			schema, err := loadSchema(ctx)
@@ -35,21 +33,13 @@ func Get() *cli.Command {
 				if _, ok := err.(*jsonschema.ValidationError); ok {
 					fmt.Printf("%#v\n", err)
 
-					os.Exit(1)
+					return errors.New("invalid values")
 				}
 
-				return errors.Wrap(err, "could not validate resulting json")
+				return errors.Wrap(err, "could not validate values")
 			}
 
-			rawPointer := ctx.Args().Get(0)
-			pointer := jsonpointer.New(rawPointer)
-
-			value, err := pointer.Get(values)
-			if err != nil {
-				return errors.Wrapf(err, "could not get value from pointer '%v'", rawPointer)
-			}
-
-			if err := outputValues(ctx, value); err != nil {
+			if err := outputValues(ctx, values); err != nil {
 				return errors.Wrap(err, "could not output updated values")
 			}
 

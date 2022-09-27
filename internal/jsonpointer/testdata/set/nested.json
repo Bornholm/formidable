@@ -2,7 +2,12 @@
     "nestedObject": {
         "foo": [
             "bar",
-            0
+            0,
+            {
+                "prop1": {
+                    "subProp": 1
+                }
+            }
         ]
     }
 }

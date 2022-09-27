@@ -162,11 +162,7 @@ func customHelpers(tpl *template.Template) template.FuncMap {
 
 			return fullProperty
 		},
-		"getValue": func(defaults, values interface{}, path string) (interface{}, error) {
-			if defaults == nil {
-				defaults = make(map[string]interface{})
-			}
-
+		"getValue": func(values interface{}, path string) (interface{}, error) {
 			if values == nil {
 				values = make(map[string]interface{})
 			}
@@ -176,13 +172,6 @@ func customHelpers(tpl *template.Template) template.FuncMap {
 			val, err := pointer.Get(values)
 			if err != nil && !errors.Is(err, jsonpointer.ErrNotFound) {
 				return nil, errors.WithStack(err)
-			}
-
-			if errors.Is(err, jsonpointer.ErrNotFound) {
-				val, err = pointer.Get(defaults)
-				if err != nil && !errors.Is(err, jsonpointer.ErrNotFound) {
-					return nil, errors.WithStack(err)
-				}
 			}
 
 			return val, nil
