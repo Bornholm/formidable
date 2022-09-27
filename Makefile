@@ -9,7 +9,7 @@ GITCHLOG_ARGS ?=
 SHELL := /bin/bash
 RUN_INSTALL_TESTS ?= yes
 
-FORMIDABLE_VERSION := 0.0.5
+FORMIDABLE_VERSION ?= 
 
 .PHONY: help
 help: ## Display this help
@@ -72,7 +72,9 @@ release: deps
 
 .PHONY: start-release
 start-release:
-	#git flow release start $(FORMIDABLE_VERSION)
+	if [ -z "$(FORMIDABLE_VERSION)" ]; then echo "You must define environment variable FORMIDABLE_VERSION"; exit 1; fi
+	
+	git flow release start $(FORMIDABLE_VERSION)
 
 	# Update package.json version
 	jq '.version = "$(FORMIDABLE_VERSION)"' package.json | sponge package.json
