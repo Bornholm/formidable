@@ -55,14 +55,9 @@ func Edit() *cli.Command {
 				return errors.Wrap(err, "could not load schema")
 			}
 
-			values, err := loadValues(ctx)
+			defaults, values, err := loadData(ctx)
 			if err != nil {
-				return errors.Wrap(err, "could not load values")
-			}
-
-			defaults, err := loadDefaults(ctx)
-			if err != nil {
-				return errors.Wrap(err, "could not load defaults")
+				return errors.Wrap(err, "could not load data")
 			}
 
 			srvCtx, srvCancel := context.WithCancel(ctx.Context)

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"reflect"
 
 	encjson "encoding/json"
 
@@ -20,6 +21,7 @@ import (
 	"forge.cadoles.com/wpetit/formidable/internal/data/updater/null"
 	"forge.cadoles.com/wpetit/formidable/internal/data/updater/stdout"
 	"forge.cadoles.com/wpetit/formidable/internal/def"
+	"forge.cadoles.com/wpetit/formidable/internal/merge"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/urfave/cli/v2"
@@ -111,6 +113,46 @@ func loadDefaults(ctx *cli.Context) (interface{}, error) {
 	}
 
 	return defaults, nil
+}
+
+func loadData(ctx *cli.Context) (defaults interface{}, values interface{}, err error) {
+	values, err = loadValues(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not load values")
+	}
+
+	defaults, err = loadDefaults(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not load defaults")
+	}
+
+	merged, err := getMatchingZeroValue(values)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
+
+	if defaults != nil {
+		if err := merge.Merge(&merged, defaults, values); err != nil {
+			return nil, nil, errors.Wrap(err, "could not merge values")
+		}
+
+		values = merged
+	}
+
+	return defaults, values, nil
+}
+
+func getMatchingZeroValue(values interface{}) (interface{}, error) {
+	valuesKind := reflect.TypeOf(values).Kind()
+
+	switch valuesKind {
+	case reflect.Map:
+		return make(map[string]interface{}, 0), nil
+	case reflect.Slice:
+		return make([]interface{}, 0), nil
+	default:
+		return nil, errors.Errorf("unexpected type '%T'", values)
+	}
 }
 
 func loadSchema(ctx *cli.Context) (*jsonschema.Schema, error) {

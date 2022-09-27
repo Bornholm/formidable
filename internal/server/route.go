@@ -49,7 +49,7 @@ func (s *Server) handleFormReq(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		panic(errors.WithStack(err))
 	} else {
-		values, err = handleForm(r.Form, s.schema, values)
+		values, err = handleForm(r.Form, s.schema, s.values)
 		if err != nil {
 			panic(errors.WithStack(err))
 		}
@@ -57,7 +57,7 @@ func (s *Server) handleFormReq(w http.ResponseWriter, r *http.Request) {
 		data.Values = values
 	}
 
-	if err := s.schema.Validate(data.Values); err != nil {
+	if err := s.schema.Validate(values); err != nil {
 		validationErr, ok := err.(*jsonschema.ValidationError)
 		if !ok {
 			panic(errors.Wrap(err, "could not validate values"))
@@ -68,7 +68,7 @@ func (s *Server) handleFormReq(w http.ResponseWriter, r *http.Request) {
 
 	if data.Error == nil {
 		if s.onUpdate != nil {
-			if err := s.onUpdate(data.Values); err != nil {
+			if err := s.onUpdate(values); err != nil {
 				panic(errors.Wrap(err, "could not update values"))
 			}
 		}

@@ -8,5 +8,6 @@ func Root() []*cli.Command {
 		Set(),
 		Get(),
 		Delete(),
+		Check(),
 	}
 }

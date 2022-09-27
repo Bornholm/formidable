@@ -14,7 +14,9 @@ import (
 type pointerSetTestCase struct {
 	DocPath             string
 	Pointer             string
+	Force               bool
 	Value               interface{}
+	ExpectedError       error
 	ExpectedRawDocument string
 }
 
@@ -37,7 +39,12 @@ func TestPointerSet(t *testing.T) {
 				"nestedObject": {
 					"foo": [
 						"bar",
-						"test"
+						"test",
+						{
+							"prop1": {
+								"subProp": 1
+							}
+						}
 					]
 				}
 			}`,
@@ -52,10 +59,43 @@ func TestPointerSet(t *testing.T) {
 					"foo": [
 						"bar",
 						0,
+						{
+							"prop1": {
+								"subProp": 1
+							}
+						},
 						"baz"
 					]
 				}
 			}`,
+		},
+		{
+			DocPath: "./testdata/set/nested.json",
+			Pointer: "/nestedObject/foo/2/prop2",
+			Value:   "baz",
+			Force:   true,
+			ExpectedRawDocument: `
+			{
+				"nestedObject": {
+					"foo": [
+						"bar",
+						0,
+						{
+							"prop2": "baz",
+							"prop1": {
+								"subProp": 1
+							}
+						}
+					]
+				}
+			}`,
+		},
+		{
+			DocPath:       "./testdata/set/nested.json",
+			Pointer:       "/nestedObject/foo/2/prop2",
+			Value:         "baz",
+			Force:         false,
+			ExpectedError: ErrNotFound,
 		},
 	}
 
@@ -77,8 +117,19 @@ func TestPointerSet(t *testing.T) {
 
 				pointer := New(tc.Pointer)
 
-				updatedDoc, err := pointer.Set(baseDoc, tc.Value)
-				if err != nil {
+				var updatedDoc interface{}
+
+				if tc.Force {
+					updatedDoc, err = pointer.Force(baseDoc, tc.Value)
+				} else {
+					updatedDoc, err = pointer.Set(baseDoc, tc.Value)
+				}
+
+				if tc.ExpectedError != nil && !errors.Is(err, tc.ExpectedError) {
+					t.Fatalf("Expected error '%v', got '%v'", tc.ExpectedError, errors.Cause(err))
+				}
+
+				if tc.ExpectedError == nil && err != nil {
 					t.Fatal(errors.WithStack(err))
 				}
 
@@ -89,12 +140,20 @@ func TestPointerSet(t *testing.T) {
 
 				var expectedDoc interface{}
 
+				if tc.ExpectedRawDocument == "" {
+					return
+				}
+
 				if err := json.Unmarshal([]byte(tc.ExpectedRawDocument), &expectedDoc); err != nil {
 					t.Fatal(errors.WithStack(err))
 				}
 
 				if !reflect.DeepEqual(expectedDoc, updatedDoc) {
-					t.Errorf("Set pointer '%s' -> '%v': expected document '%s', got '%s'", tc.Pointer, tc.Value, strings.TrimSpace(tc.ExpectedRawDocument), rawDoc)
+					command := "Set"
+					if tc.Force {
+						command = "Force"
+					}
+					t.Errorf("%s pointer '%s' -> '%v': expected document '%s', got '%s'", command, tc.Pointer, tc.Value, strings.TrimSpace(tc.ExpectedRawDocument), rawDoc)
 				}
 			})
 		}(i, tc)

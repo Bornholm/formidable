@@ -33,9 +33,9 @@ func Set() *cli.Command {
 				return errors.Wrap(err, "could not load schema")
 			}
 
-			values, err := loadValues(ctx)
+			_, values, err := loadData(ctx)
 			if err != nil {
-				return errors.Wrap(err, "could not load values")
+				return errors.Wrap(err, "could not load data")
 			}
 
 			rawPointer := ctx.Args().Get(0)
