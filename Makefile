@@ -9,7 +9,7 @@ GITCHLOG_ARGS ?=
 SHELL := /bin/bash
 RUN_INSTALL_TESTS ?= yes
 
-FORMIDABLE_VERSION := 0.0.5
+FORMIDABLE_VERSION ?= 
 
 .PHONY: help
 help: ## Display this help
@@ -41,7 +41,15 @@ lint: ## Lint sources code
 build: build-frmd ## Build artefacts
 
 build-frmd: deps tailwind ## Build executable
-	CGO_ENABLED=0 go build -v -o ./bin/frmd ./cmd/frmd
+	CGO_ENABLED=0 go build \
+		-v \
+		-ldflags "\
+			-X 'main.GitRef=$(shell git rev-parse --short HEAD)' \
+			-X 'main.ProjectVersion=$(shell git describe --always)' \
+			-X 'main.BuildDate=$(shell date --utc --rfc-3339=seconds)' \
+		" \
+		-o ./bin/frmd \
+		./cmd/frmd
 
 .PHONY: tailwind
 tailwind: deps
@@ -64,7 +72,9 @@ release: deps
 
 .PHONY: start-release
 start-release:
-	#git flow release start $(FORMIDABLE_VERSION)
+	if [ -z "$(FORMIDABLE_VERSION)" ]; then echo "You must define environment variable FORMIDABLE_VERSION"; exit 1; fi
+	
+	git flow release start $(FORMIDABLE_VERSION)
 
 	# Update package.json version
 	jq '.version = "$(FORMIDABLE_VERSION)"' package.json | sponge package.json

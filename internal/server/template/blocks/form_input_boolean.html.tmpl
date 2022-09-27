@@ -1,6 +1,6 @@
 {{define "form_input_boolean"}}
 {{ $fullProperty := getFullProperty .Parent .Property }}
-{{ $checked := getValue .Defaults .Values $fullProperty }}
+{{ $checked := getValue .Values $fullProperty }}
 <label for="yes:{{ $fullProperty }}" class="inline-flex items-center mt-3">
     <input type="radio"
         class="h-5 w-5 text-gray-600"

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"net/url"
+	"os"
+	"reflect"
 
 	encjson "encoding/json"
 
@@ -16,8 +18,10 @@ import (
 	"forge.cadoles.com/wpetit/formidable/internal/data/scheme/stdin"
 	"forge.cadoles.com/wpetit/formidable/internal/data/updater/exec"
 	fileUpdater "forge.cadoles.com/wpetit/formidable/internal/data/updater/file"
+	"forge.cadoles.com/wpetit/formidable/internal/data/updater/null"
 	"forge.cadoles.com/wpetit/formidable/internal/data/updater/stdout"
 	"forge.cadoles.com/wpetit/formidable/internal/def"
+	"forge.cadoles.com/wpetit/formidable/internal/merge"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/urfave/cli/v2"
@@ -34,20 +38,20 @@ func commonFlags() []cli.Flag {
 		&cli.StringFlag{
 			Name:    "defaults",
 			Aliases: []string{"d"},
-			Usage:   "Default values as JSON or file path prefixed by '@'",
+			Usage:   "Use `defaults_url` as defaults",
 			Value:   "",
 		},
 		&cli.StringFlag{
 			Name:    "values",
 			Aliases: []string{"v"},
-			Usage:   "Current values as JSON or file path prefixed by '@'",
+			Usage:   "Use `values_url` as values",
 			Value:   "",
 		},
 		&cli.StringFlag{
-			Name:      "schema",
-			Aliases:   []string{"s"},
-			Usage:     "Use `schema_file` as schema",
-			TakesFile: true,
+			Name:    "schema",
+			Aliases: []string{"s"},
+			Usage:   "Use `schema_url` as schema",
+			Value:   "",
 		},
 		&cli.StringFlag{
 			Name:    "output",
@@ -111,6 +115,46 @@ func loadDefaults(ctx *cli.Context) (interface{}, error) {
 	return defaults, nil
 }
 
+func loadData(ctx *cli.Context) (defaults interface{}, values interface{}, err error) {
+	values, err = loadValues(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not load values")
+	}
+
+	defaults, err = loadDefaults(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not load defaults")
+	}
+
+	merged, err := getMatchingZeroValue(values)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
+
+	if defaults != nil {
+		if err := merge.Merge(&merged, defaults, values); err != nil {
+			return nil, nil, errors.Wrap(err, "could not merge values")
+		}
+
+		values = merged
+	}
+
+	return defaults, values, nil
+}
+
+func getMatchingZeroValue(values interface{}) (interface{}, error) {
+	valuesKind := reflect.TypeOf(values).Kind()
+
+	switch valuesKind {
+	case reflect.Map:
+		return make(map[string]interface{}, 0), nil
+	case reflect.Slice:
+		return make([]interface{}, 0), nil
+	default:
+		return nil, errors.Errorf("unexpected type '%T'", values)
+	}
+}
+
 func loadSchema(ctx *cli.Context) (*jsonschema.Schema, error) {
 	schemaFlag := ctx.String("schema")
 
@@ -172,7 +216,7 @@ func outputValues(ctx *cli.Context, values interface{}) error {
 	}
 
 	defer func() {
-		if err := writer.Close(); err != nil {
+		if err := writer.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
 			panic(errors.WithStack(err))
 		}
 	}()
@@ -205,6 +249,7 @@ func newUpdater() *data.Updater {
 		stdout.NewUpdaterHandler(),
 		fileUpdater.NewUpdaterHandler(),
 		exec.NewUpdaterHandler(),
+		null.NewUpdaterHandler(),
 	)
 }
 

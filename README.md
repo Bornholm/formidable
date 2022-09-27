@@ -87,6 +87,10 @@ echo '{}' | FORMIDABLE_BROWSER="firefox" frmd \
 
 > TODO: Write doc + example
 
+#### `null://`
+
+> TODO: Write doc + example
+
 #### `file://`
 
 > TODO: Write doc + example

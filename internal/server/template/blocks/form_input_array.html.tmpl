@@ -1,7 +1,7 @@
 {{ define "form_input_array" }}
     {{ $root := . }}
     {{ $fullProperty := getFullProperty .Parent .Property }}
-    {{ $values := getValue .Defaults .Values $fullProperty }}
+    {{ $values := getValue .Values $fullProperty }}
     <table width="100%">
         <tbody>
             {{ range $index, $value := $values }}

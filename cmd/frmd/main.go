@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"time"
 
 	"forge.cadoles.com/wpetit/formidable/internal/command"
 	"github.com/pkg/errors"
@@ -15,13 +16,20 @@ import (
 var (
 	GitRef         = "unknown"
 	ProjectVersion = "unknown"
-	BuildDate      = "unknown"
+	BuildDate      = time.Now().UTC().Format(time.RFC3339)
 )
 
 func main() {
 	ctx := context.Background()
 
+	compiled, err := time.Parse(time.RFC3339, BuildDate)
+	if err != nil {
+		panic(errors.Wrapf(err, "could not parse build date '%s'", BuildDate))
+	}
+
 	app := &cli.App{
+		Version:  fmt.Sprintf("%s (%s, %s)", ProjectVersion, GitRef, BuildDate),
+		Compiled: compiled,
 		Name:     "frmd",
 		Usage:    "JSON Schema based cli forms",
 		Commands: command.Root(),
@@ -69,18 +77,32 @@ func main() {
 				Value:  "",
 				Hidden: true,
 			},
+			&cli.BoolFlag{
+				Name:    "debug",
+				EnvVars: []string{"FORMIDABLE_DEBUG"},
+				Value:   false,
+			},
 		},
 	}
 
 	app.ExitErrHandler = func(ctx *cli.Context, err error) {
-		fmt.Printf("%+v", err)
+		if err == nil {
+			return
+		}
+
+		debug := ctx.Bool("debug")
+
+		if !debug {
+			fmt.Printf("[ERROR] %v\n", err)
+		} else {
+			fmt.Printf("%+v", err)
+		}
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
 	sort.Sort(cli.CommandsByName(app.Commands))
 
-	err := app.RunContext(ctx, os.Args)
-	if err != nil {
-		panic(errors.WithStack(err))
+	if err := app.RunContext(ctx, os.Args); err != nil {
+		os.Exit(1)
 	}
 }

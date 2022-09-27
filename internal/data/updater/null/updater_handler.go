@@ -1,35 +1,34 @@
-package stdout
+package null
 
 import (
 	"io"
 	"net/url"
-	"os"
 )
 
-const SchemeStdout = "stdout"
+const SchemeNull = "null"
 
 type UpdaterHandler struct{}
 
 func (h *UpdaterHandler) Match(url *url.URL) bool {
-	return url.Scheme == SchemeStdout
+	return url.Scheme == SchemeNull
 }
 
 func (u *UpdaterHandler) Update(url *url.URL) (io.WriteCloser, error) {
-	return &stdoutFakeCloser{}, nil
+	return &nullCloser{}, nil
 }
 
 func NewUpdaterHandler() *UpdaterHandler {
 	return &UpdaterHandler{}
 }
 
-type stdoutFakeCloser struct {
+type nullCloser struct {
 	io.WriteCloser
 }
 
-func (c *stdoutFakeCloser) Write(p []byte) (n int, err error) {
-	return os.Stdout.Write(p)
+func (c *nullCloser) Write(p []byte) (n int, err error) {
+	return io.Discard.Write(p)
 }
 
-func (c *stdoutFakeCloser) Close() error {
+func (c *nullCloser) Close() error {
 	return nil
 }
