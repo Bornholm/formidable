@@ -2,7 +2,7 @@
 set -e
 
 FORMIDABLE_RELEASES_URL="https://github.com/Bornholm/formidable/releases"
-FORMIDABLE_DESTDIR="."
+FORMIDABLE_DESTDIR="${FORMIDABLE_DESTDIR:-.}"
 FORMIDABLE_FILE_BASENAME="frmd"
 FORMIDABLE_PLATEFORM_SUFFIX="$(uname -s)_$(uname -m)"
 
